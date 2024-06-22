@@ -2,6 +2,7 @@
 """module to create a cache class"""
 
 
+from typing import Callable, Optional, Union
 import redis
 import uuid
 
@@ -13,7 +14,7 @@ class Cache:
         self._redis = redis.Redis()
         self._redis.flushdb()
 
-    def store(self, data):
+    def store(self, data: Union[str, bytes, int, float]) -> str:
         """method to store data in redis.
         data(bytes): value to be assigned to a random key
         """
