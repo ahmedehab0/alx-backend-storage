@@ -11,7 +11,7 @@ def count_calls(method: Callable) -> Callable:
     @wraps(method)
     def wrapper(self, *args, **kwargs):
         self._redis.incr(method.__qualname__)
-        method(self, *args, **kwargs)
+        return method(self, *args, **kwargs)
     return wrapper
 
 def call_history(method: Callable) -> Callable:
@@ -23,7 +23,7 @@ def call_history(method: Callable) -> Callable:
     outputs = key + ":outputs"
 
     @wraps(method)
-    def wrapper(self, *args, **kwargs):
+    def wrapper(self, *args, **kwargs):  # sourcery skip: avoid-builtin-shadow
         """ Wrapper for decorator functionality """
         self._redis.rpush(inputs, str(args))
         data = method(self, *args, **kwargs)
@@ -34,7 +34,6 @@ def call_history(method: Callable) -> Callable:
 
 class Cache:
     """a simple caching class"""
-    _redis = ''
     def __init__(self):
         """special method to initialize the attributes"""
         self._redis = redis.Redis()
@@ -49,12 +48,15 @@ class Cache:
         key = str(uuid.uuid4())
         self._redis.set(key, data)
         return key
+
     def get(self, key: str, fn: Optional[Callable] = None) -> Any:
         value = self._redis.get(key)
         if fn:
             return fn(value)
         return value
+
     def get_str(key: str) -> str:
         return str(self._redis.get(key))
+
     def get_int(key: str) -> int:
         return int(self._redis.get(key))
